@@ -13,7 +13,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
@@ -27,7 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
@@ -118,7 +119,11 @@ fun TaskListContent(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = { imagePickerLauncher.launch("image/*") }) {
+            Button(onClick = { imagePickerLauncher.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFA500),
+                    contentColor = Color.White
+                )) {
                 Text("Pick Image")
             }
             Button(
@@ -128,7 +133,11 @@ fun TaskListContent(
                         newTaskTitle = ""
                         selectedImageUri = null
                     }
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFA500),
+                    contentColor = Color.White
+                )
             ) {
                 Text("Add Task")
             }
@@ -177,6 +186,11 @@ fun TaskItem(task: Task, onDeleteTask: (Task) -> Unit) {
         IconButton(onClick = {onDeleteTask(task)}){
             Icon(imageVector = Icons.Default.Delete, contentDescription="Delete Task")
         }
+        //Edit icon
+        IconButton(onClick={}){
+            Icon(imageVector= Icons.Default.Edit, contentDescription="Edit Task")
+        }
+
     }
 }
 
