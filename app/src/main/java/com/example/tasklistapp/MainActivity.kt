@@ -72,12 +72,21 @@ fun TaskListScreen() {
         tasks.remove(task)
     }
 
+    //Edit task function
+    val onEditTask:(Task, String) -> Unit = {task, newTitle ->
+        val index = tasks.indexOf(task)
+        if(index != -1){
+            tasks[index] = task.copy(title=newTitle)
+        }
+    }
+
     TaskListContent(
         tasks = tasks,
         onAddTask = { title, imageUri ->
             tasks.add(Task(title, imageUri))
         },
-        onDeleteTask = onDeleteTask
+        onDeleteTask = onDeleteTask,
+        onEditTask = onEditTask
     )
 }
 
@@ -85,7 +94,8 @@ fun TaskListScreen() {
 fun TaskListContent(
     tasks: List<Task>,
     onAddTask: (String, String?) -> Unit,
-    onDeleteTask:(Task) -> Unit
+    onDeleteTask:(Task) -> Unit,
+    onEditTask: (Task, String) -> Unit
 ) {
     var newTaskTitle by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<String?>(null) }
@@ -145,24 +155,27 @@ fun TaskListContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TaskList(tasks=tasks, onDeleteTask=onDeleteTask)
+        TaskList(tasks=tasks, onDeleteTask=onDeleteTask, onEditTask =onEditTask)
     }
 }
 //Using a LazyColumn to display the task list MISSING
 @Composable
-fun TaskList(tasks: List<Task>, onDeleteTask: (Task) -> Unit) {
+fun TaskList(tasks: List<Task>, onDeleteTask: (Task) -> Unit, onEditTask: (Task, String) -> Unit) {
 
     Column {
         tasks.forEach { task ->
-            TaskItem(task = task, onDeleteTask = onDeleteTask)
+            TaskItem(task = task, onDeleteTask = onDeleteTask, onEditTask = onEditTask)
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
+
 @Composable
-fun TaskItem(task: Task, onDeleteTask: (Task) -> Unit) {
+fun TaskItem(task: Task, onDeleteTask: (Task) -> Unit, onEditTask: (Task, String) -> Unit) {
     var grayscale by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false)}
+    var newTitle by remember { mutableStateOf(task.title)}
 
     Row(
         modifier = Modifier
@@ -187,10 +200,37 @@ fun TaskItem(task: Task, onDeleteTask: (Task) -> Unit) {
             Icon(imageVector = Icons.Default.Delete, contentDescription="Delete Task")
         }
         //Edit icon
-        IconButton(onClick={}){
+        IconButton(onClick={showEditDialog=true}){
             Icon(imageVector= Icons.Default.Edit, contentDescription="Edit Task")
         }
 
+    }
+
+    if(showEditDialog){
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = {Text("Edit Task")},
+            text = {
+                OutlinedTextField(value = newTitle, onValueChange = {newTitle = it},
+                    label= {Text("Task title")}
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    onEditTask(task, newTitle)
+                    showEditDialog = false
+                }){
+                    Text("Save changes")
+                }
+            },
+            dismissButton = {
+                Button(onClick={
+                    showEditDialog = false
+                }){
+                    Text("Cancel")
+                }
+            }
+            )
     }
 }
 
