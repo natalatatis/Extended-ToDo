@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,10 +75,10 @@ fun TaskListScreen() {
     }
 
     //Edit task function
-    val onEditTask:(Task, String) -> Unit = {task, newTitle ->
+    val onEditTask:(Task, String, String?) -> Unit = {task, newTitle, newImageUri ->
         val index = tasks.indexOf(task)
         if(index != -1){
-            tasks[index] = task.copy(title=newTitle)
+            tasks[index] = task.copy(title=newTitle, imageUri = newImageUri)
         }
     }
 
@@ -95,7 +97,7 @@ fun TaskListContent(
     tasks: List<Task>,
     onAddTask: (String, String?) -> Unit,
     onDeleteTask:(Task) -> Unit,
-    onEditTask: (Task, String) -> Unit
+    onEditTask: (Task, String, String?) -> Unit
 ) {
     var newTaskTitle by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<String?>(null) }
@@ -134,7 +136,7 @@ fun TaskListContent(
                     containerColor = Color(0xFFFFA500),
                     contentColor = Color.White
                 )) {
-                Text("Pick Image")
+                Text("Add image")
             }
             Button(
                 onClick = {
@@ -160,10 +162,10 @@ fun TaskListContent(
 }
 //Using a LazyColumn to display the task list MISSING
 @Composable
-fun TaskList(tasks: List<Task>, onDeleteTask: (Task) -> Unit, onEditTask: (Task, String) -> Unit) {
+fun TaskList(tasks: List<Task>, onDeleteTask: (Task) -> Unit, onEditTask: (Task, String, String?) -> Unit) {
 
-    Column {
-        tasks.forEach { task ->
+    LazyColumn {
+        items(tasks){ task ->
             TaskItem(task = task, onDeleteTask = onDeleteTask, onEditTask = onEditTask)
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -172,10 +174,17 @@ fun TaskList(tasks: List<Task>, onDeleteTask: (Task) -> Unit, onEditTask: (Task,
 
 
 @Composable
-fun TaskItem(task: Task, onDeleteTask: (Task) -> Unit, onEditTask: (Task, String) -> Unit) {
+fun TaskItem(task: Task, onDeleteTask: (Task) -> Unit, onEditTask: (Task, String, String?) -> Unit) {
     var grayscale by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false)}
     var newTitle by remember { mutableStateOf(task.title)}
+    var newImageUri by remember {mutableStateOf(task.imageUri)}
+
+    //pick the image
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()) {
+        uri-> newImageUri = uri.toString()
+    }
 
     Row(
         modifier = Modifier
@@ -211,13 +220,22 @@ fun TaskItem(task: Task, onDeleteTask: (Task) -> Unit, onEditTask: (Task, String
             onDismissRequest = { showEditDialog = false },
             title = {Text("Edit Task")},
             text = {
-                OutlinedTextField(value = newTitle, onValueChange = {newTitle = it},
-                    label= {Text("Task title")}
-                )
+                Column{
+                    OutlinedTextField(value = newTitle, onValueChange = {newTitle = it},
+                        label= {Text("Task title")},
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(onClick= {imagePickerLauncher.launch("image/*")}){
+                        Text("Pick New Image")
+                    }
+                }
+
             },
             confirmButton = {
                 Button(onClick = {
-                    onEditTask(task, newTitle)
+                    onEditTask(task, newTitle, newImageUri)
                     showEditDialog = false
                 }){
                     Text("Save changes")
